@@ -1,25 +1,25 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>❄️ Snowflake Chat</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Snowflake Chat — Modern</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <!-- Snow canvas -->
-  <canvas id="snow"></canvas>
+  <canvas id="snow" aria-hidden="true"></canvas>
 
   <!-- Top bar -->
-  <header class="topbar">
+  <header class="topbar" role="banner">
     <div class="left">
       <img id="avatar" src="https://api.dicebear.com/6.x/identicon/svg?seed=snow" alt="avatar" />
       <div class="title">❄️ Snowflake Chat</div>
     </div>
     <div class="right">
-      <button id="toggle-snow" title="Toggle snow">❄️</button>
-      <button id="theme-toggle" title="Toggle theme">🌙</button>
-      <button id="open-settings" title="Settings">⚙️</button>
+      <button id="toggle-snow" class="icon" title="Toggle snow" aria-pressed="true">❄️</button>
+      <button id="theme-toggle" class="icon" title="Toggle theme">🌙</button>
+      <button id="open-settings" class="icon" title="Settings">⚙️</button>
     </div>
   </header>
 
@@ -27,31 +27,31 @@
   <div id="loader" aria-hidden="true">Uploading…</div>
 
   <!-- Login (password + optional saved name & link) -->
-  <div id="login-screen" class="panel center">
-    <h2>❄️ Welcome to Snowflake</h2>
+  <div id="login-screen" class="panel center" role="region" aria-labelledby="login-title">
+    <h2 id="login-title">❄️ Welcome to Snowflake</h2>
     <p>Enter your private password</p>
-    <input id="loginPass" type="password" placeholder="Password" />
+    <input id="loginPass" type="password" placeholder="Password" aria-label="Password" />
     <button id="pwEnter">Enter</button>
-    <p class="error" id="loginError"></p>
+    <p class="error" id="loginError" aria-live="polite"></p>
 
     <hr />
 
     <p>Display name (saved locally)</p>
     <div class="row">
-      <input id="nameInput" type="text" placeholder="Your display name" />
+      <input id="nameInput" type="text" placeholder="Your display name" aria-label="Display name" />
       <button id="saveName">Save</button>
     </div>
 
     <div class="row">
       <button id="createLink">Create Shareable Link</button>
-      <input id="linkOut" readonly placeholder="Link will appear here" />
+      <input id="linkOut" readonly placeholder="Link will appear here" aria-label="Shareable link" />
     </div>
 
     <p class="muted">Or open this page with <code>?token=YOUR_TOKEN</code> to auto-login.</p>
   </div>
 
   <!-- Settings panel -->
-  <aside id="settings" class="panel hidden">
+  <aside id="settings" class="panel hidden" role="region" aria-label="Settings panel">
     <h3>Settings</h3>
     <label>Disappearing default (minutes)
       <select id="defaultTTL">
@@ -69,17 +69,19 @@
   </aside>
 
   <!-- Main chat -->
-  <main id="chat-screen" class="hidden" aria-live="polite">
-    <div id="messages" class="messages"></div>
-    <div id="typingIndicator" class="typing" aria-hidden="true"></div>
-
-    <div class="composer">
-      <input id="fileInput" type="file" accept="image/*,audio/*,application/pdf" style="display:none" />
-      <button id="attach" title="Attach">📎</button>
-      <button id="record" title="Record">🎙</button>
-      <input id="msg" type="text" placeholder="Type a message" autocomplete="off" />
-      <button id="send">Send</button>
+  <main id="chat-screen" class="hidden" aria-live="polite" role="main">
+    <div class="pane">
+      <div id="messages" class="messages" role="list" aria-label="Messages"></div>
+      <div id="typingIndicator" class="typing" aria-hidden="true"></div>
     </div>
+
+    <form class="composer" onsubmit="return false;" aria-label="Message composer">
+      <input id="fileInput" type="file" accept="image/*,audio/*,application/pdf" style="display:none" />
+      <button id="attach" type="button" title="Attach">📎</button>
+      <button id="record" type="button" title="Record">🎙</button>
+      <input id="msg" type="text" placeholder="Type a message" autocomplete="off" aria-label="Message input" />
+      <button id="send" type="button">Send</button>
+    </form>
   </main>
 
   <!-- Firebase v8 (matched to your original imports) -->
