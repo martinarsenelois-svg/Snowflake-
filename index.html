@@ -1,73 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>❄️ Snowflake Private Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- Firebase v8 -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>❄️ Snowflake Chat</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<!-- ================= LOGIN SCREEN ================= -->
-<section id="loginScreen" class="screen login-screen">
-  <div class="login-wrapper">
-    <div class="login-card">
-      <div class="logo">❄️</div>
-      <h1>Snowflake</h1>
-      <p>Private 1-on-1 Chat</p>
+<!-- Snow -->
+<canvas id="snow"></canvas>
 
-      <input
-        id="passwordInput"
-        type="password"
-        placeholder="Enter Room Password"
-        autocomplete="off"
-      />
+<!-- Top Bar -->
+<header class="topbar">
+  <div class="left">
+    <img id="avatar" src="https://api.dicebear.com/6.x/identicon/svg?seed=snow" />
+    <span class="title">❄️ Snowflake Chat</span>
+  </div>
+  <div class="right">
+    <button id="toggleSnow" title="Snow">❄️</button>
+    <button id="toggleTheme" title="Theme">🌙</button>
+    <button id="openSettings" title="Settings">⚙️</button>
+  </div>
+</header>
 
-      <button id="loginButton">Enter Chat</button>
+<!-- LOGIN -->
+<section id="loginScreen" class="panel center">
+  <h2>Welcome to Snowflake</h2>
+  <p>Private access</p>
 
-      <div class="login-hint">
-        Encrypted · Private · Temporary
+  <input id="loginPassword" type="password" placeholder="Password" />
+  <button id="loginBtn">Enter</button>
+  <p id="loginError" class="error"></p>
+
+  <hr />
+
+  <input id="nameInput" type="text" placeholder="Your username" />
+  <button id="saveName">Save name</button>
+
+  <p class="muted">Username is used to find you in chats</p>
+</section>
+
+<!-- MAIN APP -->
+<section id="app" class="hidden">
+
+  <div class="layout">
+
+    <!-- LEFT PANEL (Chats & Search) -->
+    <aside class="sidebar">
+      <div class="searchBox">
+        <input id="userSearch" type="text" placeholder="Search username…" />
       </div>
-    </div>
+
+      <div id="userList" class="userList">
+        <!-- Users injected here -->
+      </div>
+    </aside>
+
+    <!-- RIGHT PANEL (Chat) -->
+    <main class="chatArea">
+
+      <div id="chatHeader" class="chatHeader hidden">
+        <span id="chatWith">Select a user</span>
+      </div>
+
+      <div id="messages" class="messages"></div>
+
+      <div id="typingIndicator" class="typing"></div>
+
+      <div class="composer">
+        <input id="fileInput" type="file" accept="image/*,audio/*" hidden />
+        <button id="attachBtn" title="Attach">📎</button>
+        <button id="recordBtn" title="Record">🎙</button>
+        <input id="messageInput" type="text" placeholder="Type a message…" />
+        <button id="sendBtn">Send</button>
+      </div>
+
+    </main>
+
   </div>
 </section>
 
-<!-- ================= CHAT SCREEN ================= -->
-<section id="chatScreen" class="screen chat-screen hidden">
+<!-- SETTINGS -->
+<aside id="settingsPanel" class="panel hidden">
+  <h3>Settings</h3>
 
-  <!-- TOP BAR -->
-  <header class="chat-header">
-    <div class="chat-title">
-      ❄️ Private Chat
-    </div>
+  <label>
+    Disappearing messages (minutes)
+    <select id="ttlSelect">
+      <option value="0">Off</option>
+      <option value="1">1</option>
+      <option value="5">5</option>
+      <option value="30">30</option>
+    </select>
+  </label>
 
-    <div class="chat-actions">
-      <button id="toggleDisappear" title="Toggle disappearing messages">⏳</button>
-      <button id="clearChatBtn" title="Delete chat for everyone">🗑</button>
-    </div>
-  </header>
+  <label>
+    <input id="snowToggle" type="checkbox" checked />
+    Enable snow
+  </label>
 
-  <!-- MESSAGE LIST -->
-  <main id="messageList" class="message-list"></main>
+  <div class="settingsActions">
+    <button id="logoutBtn">Logout</button>
+    <button id="clearChatBtn">Clear current chat</button>
+  </div>
+</aside>
 
-  <!-- INPUT BAR -->
-  <footer class="chat-input-bar">
-    <input
-      id="messageInput"
-      type="text"
-      placeholder="Type a message…"
-      autocomplete="off"
-    />
-    <button id="sendButton">Send</button>
-  </footer>
+<!-- Firebase v8 -->
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js"></script>
 
-</section>
-
-<script src="app.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
