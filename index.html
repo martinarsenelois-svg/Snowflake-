@@ -1,57 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>❄️ Snowflake Chat</title>
+  <meta charset="utf-8" />
+  <title>❄️ Snowflake Chat</title>
 
-<link rel="stylesheet" href="style.css">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- PWA / iOS Safe -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
 </head>
 
-<body>
+<body class="login">
 
-<section id="login" class="login">
+<!-- ================= LOGIN SCREEN ================= -->
+<div id="loginScreen" class="screen login-screen">
   <div class="login-card">
     <div class="logo">❄️</div>
     <h1>Snowflake</h1>
-    <p>Private 1-to-1 chat</p>
-    <input id="nameInput" placeholder="Your name">
-    <input id="passInput" type="password" placeholder="Password">
-    <button id="loginBtn">Enter</button>
-    <div id="loginError"></div>
+    <p class="subtitle">Private 1-to-1 Chat</p>
+
+    <input id="nameInput" type="text" placeholder="Your name" autocomplete="name" />
+    <input id="passwordInput" type="password" placeholder="Chat password" />
+
+    <button id="loginBtn">Enter Chat</button>
+    <div id="loginError" class="error"></div>
   </div>
-</section>
-
-<section id="chat" class="chat hidden">
-
-<header class="header">
-  <div class="avatar">❄️</div>
-  <div class="header-info">
-    <div class="title">Snowflake</div>
-    <div id="status" class="status">offline</div>
-  </div>
-</header>
-
-<main id="messages" class="messages"></main>
-
-<div id="replyBar" class="reply hidden">
-  <span id="replyPreview"></span>
-  <button id="cancelReply">✕</button>
 </div>
 
-<form id="composer" class="composer">
-  <input id="fileInput" type="file" accept="image/*" hidden>
-  <button type="button" id="attachBtn">📎</button>
-  <button type="button" id="micBtn">🎙</button>
-  <input id="messageInput" placeholder="Message…">
-  <button type="submit">➤</button>
-</form>
+<!-- ================= CHAT SCREEN ================= -->
+<div id="chatScreen" class="screen hidden">
 
-</section>
+  <!-- Header -->
+  <header class="chat-header">
+    <div class="chat-title">
+      <span id="chatName">Private Chat</span>
+      <small id="chatStatus">offline</small>
+    </div>
 
+    <div class="header-actions">
+      <button id="exportChatBtn" title="Export chat">⬇</button>
+      <button id="themeToggle" title="Toggle theme">🌙</button>
+    </div>
+  </header>
+
+  <!-- Messages -->
+  <div id="messages" class="messages"></div>
+
+  <!-- Typing -->
+  <div id="typingIndicator" class="typing"></div>
+
+  <!-- Reply Preview -->
+  <div id="replyBar" class="reply-bar hidden">
+    <div class="reply-content">
+      <strong>Replying to:</strong>
+      <span id="replyText"></span>
+    </div>
+    <button id="cancelReply">✖</button>
+  </div>
+
+  <!-- Composer -->
+  <div class="composer">
+    <div id="replyBar" class="reply-bar hidden">
+  <span id="replyText"></span>
+  <button id="cancelReply">✕</button>
+</div>
+<input id="fileInput" type="file" accept="image/*,audio/*" hidden />
+
+    <button id="attachBtn" title="Attach">📎</button>
+    <button id="recordBtn" title="Voice">🎙</button>
+
+    <input
+      id="messageInput"
+      type="text"
+      placeholder="Message"
+      autocomplete="off"
+    />
+
+    <button id="sendBtn">Send</button>
+  </div>
+</div>
+
+<!-- ================= MESSAGE ACTION MENU ================= -->
+<div id="msgMenu" class="msg-menu hidden">
+  <button data-action="reply">Reply</button>
+  <button data-action="delete-me">Delete for me</button>
+  <button data-action="delete-all">Delete for everyone</button>
+  <button data-action="hard-delete" class="danger">Admin hard delete</button>
+</div>
+
+<!-- ================= FIREBASE v8 ================= -->
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+
+<!-- App -->
 <script src="script.js"></script>
 </body>
 </html>
