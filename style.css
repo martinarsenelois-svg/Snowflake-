@@ -5,29 +5,26 @@
   --me:linear-gradient(135deg,#9f7aea,#6b46c1);
 }
 
-body {
+*{box-sizing:border-box}
+body{
   margin:0;
-  font-family:system-ui,sans-serif;
-  background:var(--bg);
   height:100dvh;
   display:flex;
   flex-direction:column;
+  background:var(--bg);
+  font-family:system-ui,sans-serif;
   overflow:hidden;
 }
 
-body.dark {
+body.dark{
   --bg:#0e0e15;
   --glass:rgba(20,20,30,.75);
   color:#fff;
 }
 
-#snow {
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-}
+#snow{position:fixed;inset:0;pointer-events:none}
 
-.topbar {
+.topbar{
   display:flex;
   justify-content:space-between;
   align-items:center;
@@ -36,34 +33,28 @@ body.dark {
   backdrop-filter:blur(10px);
 }
 
-.left { display:flex; gap:10px; align-items:center }
-.avatar {
-  width:40px;height:40px;
-  border-radius:12px;
-  background:var(--accent);
-  display:grid;place-items:center;
-  color:#fff;
-}
+.left{display:flex;gap:10px;align-items:center}
+.left img{width:40px;height:40px;border-radius:12px}
 
-.panel {
+.panel{
   margin:20px auto;
   padding:16px;
   width:90%;
-  max-width:320px;
+  max-width:340px;
   background:var(--glass);
   border-radius:14px;
-  text-align:center;
 }
 
-.hidden { display:none }
+.center{text-align:center}
+.hidden{display:none}
 
-#chat {
+#chat{
   flex:1;
   overflow-y:auto;
   padding:12px;
 }
 
-.msg {
+.msg{
   max-width:75%;
   padding:10px;
   border-radius:16px;
@@ -71,33 +62,37 @@ body.dark {
   animation:pop .12s ease;
 }
 
-.me {
+.me{
   margin-left:auto;
   background:var(--me);
   color:#fff;
   border-bottom-right-radius:4px;
 }
 
-.other {
+.other{
   background:var(--glass);
   border-bottom-left-radius:4px;
 }
 
-.meta {
+.meta{
   font-size:11px;
   opacity:.7;
   margin-top:4px;
 }
 
-.reply {
+.reactions span{
+  cursor:pointer;
+  margin-right:4px;
+}
+
+.reply{
   background:var(--glass);
   padding:6px 10px;
   display:flex;
   justify-content:space-between;
-  align-items:center;
 }
 
-.composer {
+.composer{
   display:flex;
   gap:8px;
   padding:10px;
@@ -105,14 +100,14 @@ body.dark {
   padding-bottom:calc(10px + env(safe-area-inset-bottom));
 }
 
-.composer input {
+.composer input{
   flex:1;
   padding:10px;
   border-radius:20px;
   border:none;
 }
 
-.composer button {
+.composer button{
   border:none;
   border-radius:50%;
   padding:10px 14px;
@@ -120,7 +115,7 @@ body.dark {
   color:#fff;
 }
 
-@keyframes pop {
-  from { transform:translateY(6px); opacity:0 }
-  to { transform:none; opacity:1 }
+@keyframes pop{
+  from{transform:translateY(6px);opacity:0}
+  to{transform:none;opacity:1}
 }

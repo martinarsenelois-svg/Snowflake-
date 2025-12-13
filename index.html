@@ -12,27 +12,47 @@
 
 <header class="topbar">
   <div class="left">
-    <div class="avatar">❄️</div>
+    <img id="avatar" src="https://api.dicebear.com/6.x/identicon/svg?seed=snow">
     <div>
       <div class="title">Snowflake Chat</div>
       <div id="presence" class="subtitle">offline</div>
     </div>
   </div>
   <div class="right">
-    <button id="themeToggle">🌙</button>
-    <button id="snowToggle">❄️</button>
+    <button id="toggleSnow">❄️</button>
+    <button id="toggleTheme">🌙</button>
+    <button id="openSettings">⚙️</button>
   </div>
 </header>
 
-<div id="login" class="panel">
-  <h2>Enter Password</h2>
+<div id="login" class="panel center">
+  <h2>❄️ Snowflake</h2>
   <input id="password" type="password" placeholder="Password">
   <button id="loginBtn">Enter</button>
-  <p id="loginError"></p>
+  <p id="loginError" class="error"></p>
+
+  <hr>
+  <input id="nameInput" placeholder="Your name">
+  <button id="saveName">Save Name</button>
 </div>
+
+<aside id="settings" class="panel hidden">
+  <h3>Settings</h3>
+  <label>Default disappearing (minutes)
+    <select id="ttlSelect">
+      <option value="0">Off</option>
+      <option value="1">1</option>
+      <option value="5">5</option>
+      <option value="30">30</option>
+    </select>
+  </label>
+  <button id="clearChat">Clear Chat (admin)</button>
+  <button id="logout">Logout</button>
+</aside>
 
 <main id="chat" class="hidden">
   <div id="messages"></div>
+  <div id="typing" class="typing"></div>
 </main>
 
 <div id="replyBar" class="reply hidden">
@@ -44,14 +64,12 @@
   <input id="fileInput" type="file" hidden>
   <button id="attach">📎</button>
   <button id="record">🎙</button>
-  <input id="msgInput" placeholder="Message…" autocomplete="off">
-  <button id="sendBtn">➤</button>
+  <input id="msgInput" placeholder="Message…">
+  <button id="send">➤</button>
 </footer>
 
-<!-- Firebase v8 -->
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-
 <script src="script.js"></script>
 </body>
 </html>
