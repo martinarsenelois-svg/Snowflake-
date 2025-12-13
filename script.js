@@ -2,13 +2,13 @@
  * FIREBASE INIT (v8)
  *********************************************************/
 var firebaseConfig = {
-  apiKey: "AIzaSyDWgauZPozTWUVuDGRaMCq2NgARt60p7wA",
-  authDomain: "snowflake-62c81.firebaseapp.com",
-  databaseURL: "https://snowflake-62c81-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "snowflake-62c81",
-  storageBucket: "snowflake-62c81.appspot.com",
-  messagingSenderId: "248778051768",
-  appId: "1:248778051768:web:113d04d437849e01c2644d"
+  apiKey: "AIzaSyATaQgQlflNeBMw0OyQZ303Eah0yt7jP6U",
+  authDomain: "snowflake-41f68.firebaseapp.com",
+  databaseURL: "https://snowflake-41f68-default-rtdb.firebaseio.com",
+  projectId: "snowflake-41f68",
+  storageBucket: "snowflake-41f68.firebasestorage.app",
+  messagingSenderId: "944290747474",
+  appId: "1:944290747474:web:75386badc7480cc934bb8b"
 };
 
 firebase.initializeApp(firebaseConfig);
