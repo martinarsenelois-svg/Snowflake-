@@ -77,10 +77,6 @@ html, body {
   cursor: pointer;
 }
 
-.login-card button:active {
-  opacity: 0.9;
-}
-
 .error {
   margin-top: 10px;
   font-size: 13px;
@@ -114,11 +110,6 @@ html, body {
   opacity: 0.85;
 }
 
-.header-actions {
-  display: flex;
-  gap: 8px;
-}
-
 .chat-header button {
   background: none;
   border: none;
@@ -140,50 +131,49 @@ html, body {
 
 /* Message bubble */
 .message {
-  max-width: 75%;
-  padding: 8px 10px;
-  border-radius: 10px;
+  max-width: 72%;
+  padding: 7px 10px;
+  border-radius: 12px;
   font-size: 14px;
   line-height: 1.35;
   position: relative;
   word-wrap: break-word;
-  animation: fadeIn .2s ease-out;
+  animation: fadeIn .18s ease-out;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(3px); }
+  from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: none; }
 }
 
 .message.me {
   background: #dcf8c6;
   margin-left: auto;
-  border-bottom-right-radius: 2px;
+  border-bottom-right-radius: 4px;
 }
 
 .message.other {
   background: #fff;
   margin-right: auto;
-  border-bottom-left-radius: 2px;
+  border-bottom-left-radius: 4px;
 }
 
-/* Deleted message */
 .message.deleted {
   font-style: italic;
   opacity: 0.6;
 }
 
-/* Reply reference */
-.reply-ref {
+/* Reply preview inside message */
+.reply-preview {
   background: rgba(0,0,0,.05);
   border-left: 3px solid #25d366;
-  padding: 4px 6px;
+  padding: 5px 6px;
   font-size: 12px;
-  margin-bottom: 4px;
-  border-radius: 4px;
+  margin-bottom: 6px;
+  border-radius: 6px;
 }
 
-/* Meta (time + ticks) */
+/* Meta */
 .meta {
   font-size: 11px;
   color: #555;
@@ -220,21 +210,11 @@ html, body {
   align-items: center;
   justify-content: space-between;
   border-top: 1px solid #ddd;
+  font-size: 13px;
 }
 
-.reply-content {
-  font-size: 12px;
-  color: #333;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.reply-bar button {
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
+.reply-bar.hidden {
+  display: none;
 }
 
 /* ================= COMPOSER ================= */
@@ -267,21 +247,25 @@ html, body {
 }
 
 /* ================= MESSAGE MENU ================= */
-.msg-menu {
+#msgMenu {
   position: fixed;
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   background: #fff;
-  border-radius: 12px;
+  border-radius: 14px;
   box-shadow: 0 8px 30px rgba(0,0,0,.25);
-  display: flex;
+  display: none;
   flex-direction: column;
   z-index: 1000;
   min-width: 220px;
 }
 
-.msg-menu button {
+#msgMenu.show {
+  display: flex;
+}
+
+#msgMenu button {
   padding: 12px;
   border: none;
   background: none;
@@ -290,32 +274,17 @@ html, body {
   cursor: pointer;
 }
 
-.msg-menu button:hover {
+#msgMenu button:hover {
   background: rgba(0,0,0,.05);
 }
 
-.msg-menu .danger {
+#msgMenu .danger {
   color: #e53935;
 }
 
 /* ================= DARK MODE ================= */
 body.dark {
   background: #0b141a;
-}
-
-body.dark .login-screen {
-  background: #0b141a;
-}
-
-body.dark .login-card {
-  background: #1f2c34;
-  color: #fff;
-}
-
-body.dark .login-card input {
-  background: #2a3942;
-  border-color: #2a3942;
-  color: #fff;
 }
 
 body.dark #chatScreen {
@@ -348,27 +317,44 @@ body.dark .reply-bar {
   background: #1f2c34;
   color: #fff;
 }
-.reply-preview {
-  background: rgba(0,0,0,.05);
-  padding: 6px;
-  border-left: 3px solid #25d366;
-  margin-bottom: 6px;
-  font-size: 12px;
-  border-radius: 6px;
-}
 
 body.dark .reply-preview {
   background: rgba(255,255,255,.08);
 }
-.reply-bar {
+/* ===== FIX: msgMenu ID SUPPORT ===== */
+#msgMenu {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0,0,0,.25);
   display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #e0e0e0;
-  padding: 6px 10px;
-  border-radius: 8px;
-  font-size: 13px;
+  flex-direction: column;
+  z-index: 1000;
+  min-width: 220px;
 }
-.reply-bar.hidden {
+
+#msgMenu.hidden {
   display: none;
+}
+
+#msgMenu button {
+  padding: 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+#msgMenu .danger {
+  color: #e53935;
+}
+
+/* Dark mode support */
+body.dark #msgMenu {
+  background: #1f2c34;
+  color: #fff;
 }

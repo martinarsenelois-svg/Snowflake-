@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -43,7 +44,6 @@
     </div>
 
     <div class="header-actions">
-      <button id="exportChatBtn" title="Export chat">⬇</button>
       <button id="themeToggle" title="Toggle theme">🌙</button>
     </div>
   </header>
@@ -65,11 +65,7 @@
 
   <!-- Composer -->
   <div class="composer">
-    <div id="replyBar" class="reply-bar hidden">
-  <span id="replyText"></span>
-  <button id="cancelReply">✕</button>
-</div>
-<input id="fileInput" type="file" accept="image/*,audio/*" hidden />
+    <input id="fileInput" type="file" accept="image/*,audio/*" hidden />
 
     <button id="attachBtn" title="Attach">📎</button>
     <button id="recordBtn" title="Voice">🎙</button>
@@ -81,23 +77,34 @@
       autocomplete="off"
     />
 
-    <button id="sendBtn">Send</button>
+    <button id="sendBtn">➤</button>
   </div>
-</div>
-
-<!-- ================= MESSAGE ACTION MENU ================= -->
-<div id="msgMenu" class="msg-menu hidden">
-  <button data-action="reply">Reply</button>
-  <button data-action="delete-me">Delete for me</button>
-  <button data-action="delete-all">Delete for everyone</button>
-  <button data-action="hard-delete" class="danger">Admin hard delete</button>
 </div>
 
 <!-- ================= FIREBASE v8 ================= -->
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
 
+<!-- Firebase config -->
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDWgauZPozTWUVuDGRaMCq2NgARt60p7wA",
+  authDomain: "snowflake-62c81.firebaseapp.com",
+  databaseURL: "https://snowflake-62c81-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "snowflake-62c81",
+  storageBucket: "snowflake-62c81.appspot.com",
+  messagingSenderId: "248778051768",
+  appId: "1:248778051768:web:113d04d437849e01c2644d"
+};
+</script>
+
 <!-- App -->
 <script src="script.js"></script>
+<!-- ================= MESSAGE ACTION MENU ================= -->
+<div id="msgMenu" class="msg-menu hidden">
+  <button id="menuReply">Reply</button>
+  <button id="menuDeleteMe">Delete for me</button>
+  <button id="menuDeleteAll" class="danger">Delete for everyone</button>
+</div>
 </body>
 </html>
