@@ -1,56 +1,46 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>❄️ Snowflake Private Chat</title>  <!-- Styles -->  <link rel="stylesheet" href="style.css">  <!-- Firebase v8 ONLY -->  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script></head>
-<body>  <!-- Snow Canvas --><canvas id="snow"></canvas>
+  <title>❄️ Snowflake Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- TOP BAR -->  <header class="topbar">
-    <div class="left">
-      <img id="avatar" alt="avatar">
-      <div class="titles">
-        <div class="title">Snowflake</div>
-        <div class="subtitle" id="presenceText">Offline</div>
-      </div>
-    </div><div class="right">
-  <button id="themeToggle" title="Toggle theme">🌙</button>
-  <button id="snowToggle" title="Toggle snow">❄️</button>
-  <button id="openMenu" title="Menu">⋮</button>
+  <!-- Firebase v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="login-box">
+    <h1>❄️ Snowflake</h1>
+    <p>Private 1-on-1 Chat</p>
+    <input id="pass" type="password" placeholder="Room Password">
+    <button onclick="login()">Enter</button>
+  </div>
 </div>
 
-  </header>  <!-- MENU -->  <div id="menu" class="menu hidden">
-    <button id="clearChatBtn">Clear chat for everyone</button>
-    <button id="disappearToggle">Disappearing messages</button>
-    <button id="logoutBtn">Logout</button>
-  </div>  <!-- LOGIN SCREEN -->  <section id="loginScreen" class="panel center">
-    <h2>Welcome ❄️</h2>
-    <p class="sub">Private 1-on-1 space. Password protected.</p><input id="loginPassword" type="password" placeholder="Password" autocomplete="off">
-<input id="loginName" type="text" placeholder="Your name" autocomplete="off">
+<!-- CHAT -->
+<div id="chat" class="hidden">
+  <header>
+    <span>❄️ Private Chat</span>
+    <div>
+      <button onclick="toggleDisappear()">⏳</button>
+      <button onclick="clearChat()">🗑</button>
+    </div>
+  </header>
 
-<button id="loginBtn">Enter chat</button>
-<p id="loginError" class="error"></p>
+  <div id="messages"></div>
 
-  </section>  <!-- CHAT SCREEN -->  <main id="chatScreen" class="hidden"><!-- Reply Bar -->
-<div id="replyBar" class="reply-bar hidden">
-  <span id="replyPreview"></span>
-  <button id="cancelReply">✕</button>
+  <div class="input-bar">
+    <input id="text" placeholder="Message…" autocomplete="off">
+    <button onclick="send()">➤</button>
+  </div>
 </div>
 
-<!-- Messages -->
-<div id="messages" class="messages"></div>
-
-<!-- Typing Indicator -->
-<div id="typingIndicator" class="typing"></div>
-
-<!-- Composer -->
-<div class="composer">
-  <button id="emojiBtn">😊</button>
-  <input id="messageInput" type="text" placeholder="Type a message" autocomplete="off">
-  <button id="sendBtn">Send</button>
-</div>
-
-  </main>  <!-- Emoji Panel -->  <div id="emojiPanel" class="emoji-panel hidden">
-    <span>😀</span><span>😂</span><span>😍</span><span>🥺</span>
-    <span>❤️</span><span>👍</span><span>🔥</span><span>😎</span>
-  </div>  <!-- App Script -->  <script src="script.js"></script></body>
+<script src="app.js"></script>
+</body>
 </html>
