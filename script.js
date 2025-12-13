@@ -1,4 +1,5 @@
-// FIREBASE CONFIG
+// ================= FIREBASE SETUP =================
+
 var firebaseConfig = {
   apiKey: "AIzaSyDWgauZPozTWUVuDGRaMCq2NgARt60p7wA",
   authDomain: "snowflake-62c81.firebaseapp.com",
@@ -8,92 +9,130 @@ var firebaseConfig = {
   messagingSenderId: "248778051768",
   appId: "1:248778051768:web:5deffaea7073f9ddc2644d"
 };
-firebase.initializeApp(firebaseConfig);
 
+firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// CONFIG
-const PASSWORD = "2382_BZ";
-const ROOM = "snowflake_private_room";
-const uid = "u_" + Math.random().toString(36).slice(2);
-let disappearing = false;
+// ================= CONSTANTS =================
 
-// LOGIN
-function login() {
-  if (pass.value !== PASSWORD) {
-    alert("Wrong password");
+const ROOM_PASSWORD = "2382_BZ";
+const ROOM_PATH = "snowflake_private_room";
+const USER_ID = "user_" + Math.random().toString(36).slice(2);
+
+let disappearingEnabled = false;
+
+// ================= DOM REFERENCES =================
+
+const loginScreen = document.getElementById("loginScreen");
+const chatScreen = document.getElementById("chatScreen");
+
+const passwordInput = document.getElementById("passwordInput");
+const loginButton = document.getElementById("loginButton");
+
+const messageList = document.getElementById("messageList");
+const messageInput = document.getElementById("messageInput");
+const sendButton = document.getElementById("sendButton");
+
+const toggleDisappearBtn = document.getElementById("toggleDisappear");
+const clearChatBtn = document.getElementById("clearChatBtn");
+
+// ================= LOGIN =================
+
+loginButton.addEventListener("click", () => {
+  const entered = passwordInput.value.trim();
+
+  if (!entered) {
+    alert("Please enter the password.");
     return;
   }
-  login.style.display = "none";
-  chat.classList.remove("hidden");
-  listen();
-}
 
-// SEND MESSAGE
-function send() {
-  if (!text.value.trim()) return;
+  if (entered !== ROOM_PASSWORD) {
+    alert("Incorrect password.");
+    return;
+  }
 
-  db.ref(ROOM).push({
-    text: text.value,
-    uid: uid,
-    time: Date.now(),
-    disappear: disappearing
-  });
+  loginScreen.classList.add("hidden");
+  chatScreen.classList.remove("hidden");
 
-  text.value = "";
-}
+  startListening();
+});
 
-// LISTEN
-function listen() {
-  db.ref(ROOM).on("child_added", snap => {
-    render(snap.key, snap.val());
-  });
+// ================= SEND MESSAGE =================
 
-  db.ref(ROOM).on("child_removed", () => {
-    messages.innerHTML = "";
-  });
-}
+sendButton.addEventListener("click", sendMessage);
+messageInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") sendMessage();
+});
 
-// RENDER MESSAGE
-function render(id, msg) {
-  const div = document.createElement("div");
-  div.className = "msg " + (msg.uid === uid ? "me" : "other");
+function sendMessage() {
+  const text = messageInput.value.trim();
+  if (!text) return;
 
-  div.innerHTML = `
-    <div>${msg.text}</div>
-    <div class="time">
-      ${new Date(msg.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
-      ${msg.uid === uid ? "✓✓" : ""}
-    </div>
-  `;
-
-  // Delete for everyone
-  div.ondblclick = () => {
-    if (confirm("Delete for everyone?")) {
-      db.ref(ROOM + "/" + id).remove();
-    }
+  const msg = {
+    text,
+    sender: USER_ID,
+    timestamp: Date.now(),
+    disappear: disappearingEnabled
   };
 
-  messages.appendChild(div);
-  messages.scrollTop = messages.scrollHeight;
+  db.ref(ROOM_PATH).push(msg);
+  messageInput.value = "";
+}
 
-  // Disappearing
+// ================= RECEIVE MESSAGES =================
+
+function startListening() {
+  db.ref(ROOM_PATH).on("child_added", snap => {
+    renderMessage(snap.key, snap.val());
+  });
+
+  db.ref(ROOM_PATH).on("child_removed", () => {
+    messageList.innerHTML = "";
+  });
+}
+
+// ================= RENDER =================
+
+function renderMessage(id, msg) {
+  const div = document.createElement("div");
+  div.className = "message " + (msg.sender === USER_ID ? "me" : "other");
+
+  const time = new Date(msg.timestamp).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+
+  div.innerHTML = `
+    <div class="message-text">${msg.text}</div>
+    <div class="message-time">${time}${msg.sender === USER_ID ? " ✓✓" : ""}</div>
+  `;
+
+  div.addEventListener("dblclick", () => {
+    if (confirm("Delete this message for everyone?")) {
+      db.ref(ROOM_PATH + "/" + id).remove();
+    }
+  });
+
+  messageList.appendChild(div);
+  messageList.scrollTop = messageList.scrollHeight;
+
   if (msg.disappear) {
     setTimeout(() => {
-      db.ref(ROOM + "/" + id).remove();
+      db.ref(ROOM_PATH + "/" + id).remove();
     }, 10000);
   }
 }
 
-// EXTRAS
-function toggleDisappear() {
-  disappearing = !disappearing;
-  alert("Disappearing mode: " + (disappearing ? "ON" : "OFF"));
-}
+// ================= EXTRAS =================
 
-function clearChat() {
+toggleDisappearBtn.addEventListener("click", () => {
+  disappearingEnabled = !disappearingEnabled;
+  alert("Disappearing messages: " + (disappearingEnabled ? "ON" : "OFF"));
+});
+
+clearChatBtn.addEventListener("click", () => {
   if (confirm("Delete entire chat for everyone?")) {
-    db.ref(ROOM).remove();
-    messages.innerHTML = "";
+    db.ref(ROOM_PATH).remove();
+    messageList.innerHTML = "";
   }
-}
+});

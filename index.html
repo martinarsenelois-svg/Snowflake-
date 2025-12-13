@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>❄️ Snowflake Chat</title>
+  <title>❄️ Snowflake Private Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Firebase v8 -->
@@ -13,33 +13,60 @@
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="login">
-  <div class="login-box">
-    <h1>❄️ Snowflake</h1>
-    <p>Private 1-on-1 Chat</p>
-    <input id="pass" type="password" placeholder="Room Password">
-    <button onclick="login()">Enter</button>
-  </div>
-</div>
+<!-- ================= LOGIN SCREEN ================= -->
+<section id="loginScreen" class="screen login-screen">
+  <div class="login-wrapper">
+    <div class="login-card">
+      <div class="logo">❄️</div>
+      <h1>Snowflake</h1>
+      <p>Private 1-on-1 Chat</p>
 
-<!-- CHAT -->
-<div id="chat" class="hidden">
-  <header>
-    <span>❄️ Private Chat</span>
-    <div>
-      <button onclick="toggleDisappear()">⏳</button>
-      <button onclick="clearChat()">🗑</button>
+      <input
+        id="passwordInput"
+        type="password"
+        placeholder="Enter Room Password"
+        autocomplete="off"
+      />
+
+      <button id="loginButton">Enter Chat</button>
+
+      <div class="login-hint">
+        Encrypted · Private · Temporary
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CHAT SCREEN ================= -->
+<section id="chatScreen" class="screen chat-screen hidden">
+
+  <!-- TOP BAR -->
+  <header class="chat-header">
+    <div class="chat-title">
+      ❄️ Private Chat
+    </div>
+
+    <div class="chat-actions">
+      <button id="toggleDisappear" title="Toggle disappearing messages">⏳</button>
+      <button id="clearChatBtn" title="Delete chat for everyone">🗑</button>
     </div>
   </header>
 
-  <div id="messages"></div>
+  <!-- MESSAGE LIST -->
+  <main id="messageList" class="message-list"></main>
 
-  <div class="input-bar">
-    <input id="text" placeholder="Message…" autocomplete="off">
-    <button onclick="send()">➤</button>
-  </div>
-</div>
+  <!-- INPUT BAR -->
+  <footer class="chat-input-bar">
+    <input
+      id="messageInput"
+      type="text"
+      placeholder="Type a message…"
+      autocomplete="off"
+    />
+    <button id="sendButton">Send</button>
+  </footer>
+
+</section>
 
 <script src="app.js"></script>
 </body>
