@@ -1,94 +1,56 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Snowflake Chat — Modern</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <!-- Snow canvas -->
-  <canvas id="snow" aria-hidden="true"></canvas>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>❄️ Snowflake Private Chat</title>  <!-- Styles -->  <link rel="stylesheet" href="style.css">  <!-- Firebase v8 ONLY -->  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script></head>
+<body>  <!-- Snow Canvas --><canvas id="snow"></canvas>
 
-  <!-- Top bar -->
-  <header class="topbar" role="banner">
+  <!-- TOP BAR -->  <header class="topbar">
     <div class="left">
-      <img id="avatar" src="https://api.dicebear.com/6.x/identicon/svg?seed=snow" alt="avatar" />
-      <div class="title">❄️ Snowflake Chat</div>
-    </div>
-    <div class="right">
-      <button id="toggle-snow" class="icon" title="Toggle snow" aria-pressed="true">❄️</button>
-      <button id="theme-toggle" class="icon" title="Toggle theme">🌙</button>
-      <button id="open-settings" class="icon" title="Settings">⚙️</button>
-    </div>
-  </header>
+      <img id="avatar" alt="avatar">
+      <div class="titles">
+        <div class="title">Snowflake</div>
+        <div class="subtitle" id="presenceText">Offline</div>
+      </div>
+    </div><div class="right">
+  <button id="themeToggle" title="Toggle theme">🌙</button>
+  <button id="snowToggle" title="Toggle snow">❄️</button>
+  <button id="openMenu" title="Menu">⋮</button>
+</div>
 
-  <!-- Loader (non-blocking) -->
-  <div id="loader" aria-hidden="true">Uploading…</div>
+  </header>  <!-- MENU -->  <div id="menu" class="menu hidden">
+    <button id="clearChatBtn">Clear chat for everyone</button>
+    <button id="disappearToggle">Disappearing messages</button>
+    <button id="logoutBtn">Logout</button>
+  </div>  <!-- LOGIN SCREEN -->  <section id="loginScreen" class="panel center">
+    <h2>Welcome ❄️</h2>
+    <p class="sub">Private 1-on-1 space. Password protected.</p><input id="loginPassword" type="password" placeholder="Password" autocomplete="off">
+<input id="loginName" type="text" placeholder="Your name" autocomplete="off">
 
-  <!-- Login (password + optional saved name & link) -->
-  <div id="login-screen" class="panel center" role="region" aria-labelledby="login-title">
-    <h2 id="login-title">❄️ Welcome to Snowflake</h2>
-    <p>Enter your private password</p>
-    <input id="loginPass" type="password" placeholder="Password" aria-label="Password" />
-    <button id="pwEnter">Enter</button>
-    <p class="error" id="loginError" aria-live="polite"></p>
+<button id="loginBtn">Enter chat</button>
+<p id="loginError" class="error"></p>
 
-    <hr />
+  </section>  <!-- CHAT SCREEN -->  <main id="chatScreen" class="hidden"><!-- Reply Bar -->
+<div id="replyBar" class="reply-bar hidden">
+  <span id="replyPreview"></span>
+  <button id="cancelReply">✕</button>
+</div>
 
-    <p>Display name (saved locally)</p>
-    <div class="row">
-      <input id="nameInput" type="text" placeholder="Your display name" aria-label="Display name" />
-      <button id="saveName">Save</button>
-    </div>
+<!-- Messages -->
+<div id="messages" class="messages"></div>
 
-    <div class="row">
-      <button id="createLink">Create Shareable Link</button>
-      <input id="linkOut" readonly placeholder="Link will appear here" aria-label="Shareable link" />
-    </div>
+<!-- Typing Indicator -->
+<div id="typingIndicator" class="typing"></div>
 
-    <p class="muted">Or open this page with <code>?token=YOUR_TOKEN</code> to auto-login.</p>
-  </div>
+<!-- Composer -->
+<div class="composer">
+  <button id="emojiBtn">😊</button>
+  <input id="messageInput" type="text" placeholder="Type a message" autocomplete="off">
+  <button id="sendBtn">Send</button>
+</div>
 
-  <!-- Settings panel -->
-  <aside id="settings" class="panel hidden" role="region" aria-label="Settings panel">
-    <h3>Settings</h3>
-    <label>Disappearing default (minutes)
-      <select id="defaultTTL">
-        <option value="0">Off</option>
-        <option value="1">1</option>
-        <option value="5">5</option>
-        <option value="30">30</option>
-      </select>
-    </label>
-    <label>Enable snow <input id="snowToggle" type="checkbox" checked /></label>
-    <div style="margin-top:10px">
-      <button id="logout">Log out</button>
-      <button id="clear-chat-admin">Clear chat (admin)</button>
-    </div>
-  </aside>
-
-  <!-- Main chat -->
-  <main id="chat-screen" class="hidden" aria-live="polite" role="main">
-    <div class="pane">
-      <div id="messages" class="messages" role="list" aria-label="Messages"></div>
-      <div id="typingIndicator" class="typing" aria-hidden="true"></div>
-    </div>
-
-    <form class="composer" onsubmit="return false;" aria-label="Message composer">
-      <input id="fileInput" type="file" accept="image/*,audio/*,application/pdf" style="display:none" />
-      <button id="attach" type="button" title="Attach">📎</button>
-      <button id="record" type="button" title="Record">🎙</button>
-      <input id="msg" type="text" placeholder="Type a message" autocomplete="off" aria-label="Message input" />
-      <button id="send" type="button">Send</button>
-    </form>
-  </main>
-
-  <!-- Firebase v8 (matched to your original imports) -->
-  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-
-  <!-- main script -->
-  <script src="script.js"></script>
-</body>
+  </main>  <!-- Emoji Panel -->  <div id="emojiPanel" class="emoji-panel hidden">
+    <span>😀</span><span>😂</span><span>😍</span><span>🥺</span>
+    <span>❤️</span><span>👍</span><span>🔥</span><span>😎</span>
+  </div>  <!-- App Script -->  <script src="script.js"></script></body>
 </html>
