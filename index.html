@@ -1,89 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Snowflake Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="style.css" />
-
-  <!-- iOS / PWA safe -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>❄️ Snowflake Chat</title>
+<link rel="stylesheet" href="style.css">
 </head>
+<body>
 
-<body class="login">
+<canvas id="snow"></canvas>
 
-  <!-- ================= LOGIN SCREEN ================= -->
-  <div id="loginScreen" class="screen login-screen">
-    <div class="login-card">
-      <div class="logo">❄️</div>
-      <h1>Snowflake</h1>
-      <p class="subtitle">Private 1-to-1 Chat</p>
-
-      <input
-        id="nameInput"
-        type="text"
-        placeholder="Your name"
-        autocomplete="name"
-      />
-
-      <input
-        id="passwordInput"
-        type="password"
-        placeholder="Chat password"
-        autocomplete="current-password"
-      />
-
-      <button id="loginBtn">Enter Chat</button>
-
-      <div id="loginError" class="error"></div>
+<header class="topbar">
+  <div class="left">
+    <div class="avatar">❄️</div>
+    <div>
+      <div class="title">Snowflake Chat</div>
+      <div id="presence" class="subtitle">offline</div>
     </div>
   </div>
-
-  <!-- ================= CHAT SCREEN ================= -->
-  <div id="chatScreen" class="screen hidden">
-
-    <!-- Header -->
-    <header class="chat-header">
-      <div class="chat-title">
-        <span id="chatName">Private Chat</span>
-        <small id="chatStatus">offline</small>
-      </div>
-      <button id="themeToggle" title="Toggle theme">🌙</button>
-    </header>
-
-    <!-- Messages -->
-    <div id="messages" class="messages"></div>
-
-    <!-- Typing -->
-    <div id="typingIndicator" class="typing"></div>
-
-    <!-- Composer -->
-    <div class="composer">
-      <input id="fileInput" type="file" accept="image/*,audio/*" hidden />
-
-      <button id="attachBtn" title="Attach">📎</button>
-      <button id="recordBtn" title="Voice">🎙</button>
-
-      <input
-        id="messageInput"
-        type="text"
-        placeholder="Message"
-        autocomplete="off"
-      />
-
-      <button id="sendBtn">Send</button>
-    </div>
-
+  <div class="right">
+    <button id="themeToggle">🌙</button>
+    <button id="snowToggle">❄️</button>
   </div>
+</header>
 
-  <!-- ================= FIREBASE v8 ================= -->
-  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+<div id="login" class="panel">
+  <h2>Enter Password</h2>
+  <input id="password" type="password" placeholder="Password">
+  <button id="loginBtn">Enter</button>
+  <p id="loginError"></p>
+</div>
 
-  <!-- App -->
-  <script src="script.js"></script>
+<main id="chat" class="hidden">
+  <div id="messages"></div>
+</main>
+
+<div id="replyBar" class="reply hidden">
+  <span id="replyText"></span>
+  <button id="cancelReply">✖</button>
+</div>
+
+<footer class="composer hidden">
+  <input id="fileInput" type="file" hidden>
+  <button id="attach">📎</button>
+  <button id="record">🎙</button>
+  <input id="msgInput" placeholder="Message…" autocomplete="off">
+  <button id="sendBtn">➤</button>
+</footer>
+
+<!-- Firebase v8 -->
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+
+<script src="script.js"></script>
 </body>
 </html>
