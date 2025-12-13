@@ -1,15 +1,24 @@
-/****************************************************
- * SNOWFLAKE CHAT — FINAL JS (PART 1 / 4)
- * Core + Login + Presence + Admin
- ****************************************************/
+/*********************************************************
+ * FIREBASE INIT (v8)
+ *********************************************************/
+var firebaseConfig = {
+  apiKey: "AIzaSyDWgauZPozTWUVuDGRaMCq2NgARt60p7wA",
+  authDomain: "snowflake-62c81.firebaseapp.com",
+  databaseURL: "https://snowflake-62c81-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "snowflake-62c81",
+  storageBucket: "snowflake-62c81.appspot.com",
+  messagingSenderId: "248778051768",
+  appId: "1:248778051768:web:113d04d437849e01c2644d"
+};
 
-/* ---------- FIREBASE ---------- */
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-/* ---------- DOM ---------- */
+/*********************************************************
+ * STATE
+ *********************************************************/
 const loginScreen = document.getElementById("loginScreen");
-const chatScreen  = document.getElementById("chatScreen");
+const chatScreen = document.getElementById("chatScreen");
 
 const nameInput = document.getElementById("nameInput");
 const passwordInput = document.getElementById("passwordInput");
@@ -19,254 +28,208 @@ const loginError = document.getElementById("loginError");
 const messagesDiv = document.getElementById("messages");
 const messageInput = document.getElementById("messageInput");
 const sendBtn = document.getElementById("sendBtn");
-
 const typingIndicator = document.getElementById("typingIndicator");
+
+const attachBtn = document.getElementById("attachBtn");
+const fileInput = document.getElementById("fileInput");
+const recordBtn = document.getElementById("recordBtn");
+
 const chatStatus = document.getElementById("chatStatus");
 const themeToggle = document.getElementById("themeToggle");
 
-const disappearSelect = document.getElementById("disappearSelect");
-const clearChatBtn = document.getElementById("clearChatBtn");
-
-const replyBar = document.getElementById("replyBar");
-const replyText = document.getElementById("replyText");
-const cancelReply = document.getElementById("cancelReply");
-
-const msgMenu = document.getElementById("msgMenu");
-
-/* ---------- STATE ---------- */
-let myId = localStorage.getItem("sf_uid");
-if (!myId) {
-  myId = Math.random().toString(36).slice(2, 10);
-  localStorage.setItem("sf_uid", myId);
-}
+let myId = localStorage.getItem("sf_uid") ||
+  Math.random().toString(36).slice(2, 10);
+localStorage.setItem("sf_uid", myId);
 
 let myName = localStorage.getItem("sf_name") || "";
 let chatId = null;
-let adminId = null;
-let isAdmin = false;
 
-let replyToMessage = null;
-let selectedMsgId = null;
-let selectedMsgData = null;
+let isRecording = false;
+let recorder = null;
+let audioChunks = [];
 
-/* ---------- HELPERS ---------- */
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+
+/*********************************************************
+ * HELPERS
+ *********************************************************/
 function hashPassword(pw) {
-  let h = 0;
+  let hash = 0;
   for (let i = 0; i < pw.length; i++) {
-    h = ((h << 5) - h) + pw.charCodeAt(i);
-    h |= 0;
+    hash = ((hash << 5) - hash) + pw.charCodeAt(i);
+    hash |= 0;
   }
-  return "chat_" + Math.abs(h);
+  return "chat_" + Math.abs(hash);
 }
 
-function esc(str = "") {
-  return str.replace(/[&<>"']/g, m =>
-    ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#39;" }[m])
-  );
+function escapeHTML(str) {
+  return str.replace(/[&<>"']/g, c => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;"
+  }[c]));
 }
 
 function scrollBottom() {
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
-/* ---------- LOGIN ---------- */
+/*********************************************************
+ * LOGIN
+ *********************************************************/
 if (myName) nameInput.value = myName;
 
 loginBtn.onclick = () => {
   const name = nameInput.value.trim();
-  const pass = passwordInput.value.trim();
+  const pw = passwordInput.value.trim();
 
-  if (!name || !pass) {
-    loginError.textContent = "Enter name & password";
+  if (!name || !pw) {
+    loginError.textContent = "Enter name and password";
     return;
   }
 
   myName = name;
-  localStorage.setItem("sf_name", name);
+  localStorage.setItem("sf_name", myName);
 
-  chatId = hashPassword(pass);
+  chatId = hashPassword(pw);
   enterChat();
 };
 
 function enterChat() {
+  document.body.classList.remove("login");
   loginScreen.classList.add("hidden");
   chatScreen.classList.remove("hidden");
 
-  setupPresence();
-  setupAdmin();
-
-  listenPresence();
-}
-
-/* ---------- PRESENCE ---------- */
-function setupPresence() {
-  const uref = db.ref("users/" + myId);
-  uref.set({
+  // Presence
+  const userRef = db.ref("users/" + myId);
+  userRef.set({
     name: myName,
     online: true,
     lastSeen: Date.now(),
-    chatId: chatId
+    chatId
   });
-
-  uref.onDisconnect().update({
+  userRef.onDisconnect().update({
     online: false,
     lastSeen: Date.now()
   });
 
-  const cref = db.ref(`chats/${chatId}/users/${myId}`);
-  cref.set(true);
-  cref.onDisconnect().remove();
+  // Join chat
+  db.ref(`chats/${chatId}/users/${myId}`).set(true);
+
+  listenPresence();
+  listenMessages();
+  listenTyping();
 }
 
+/*********************************************************
+ * PRESENCE
+ *********************************************************/
 function listenPresence() {
   db.ref(`chats/${chatId}/users`).on("value", snap => {
     const users = snap.val() || {};
-    const others = Object.keys(users).filter(id => id !== myId);
+    const otherIds = Object.keys(users).filter(id => id !== myId);
 
-    if (!others.length) {
-      chatStatus.textContent = "waiting…";
+    if (!otherIds.length) {
+      chatStatus.textContent = "waiting for user…";
       return;
     }
 
-    db.ref("users/" + others[0]).on("value", s => {
+    db.ref("users/" + otherIds[0]).on("value", s => {
       const u = s.val();
       if (!u) return;
-      chatStatus.textContent = u.online
-        ? "online"
-        : "last seen " + new Date(u.lastSeen).toLocaleTimeString();
+      chatStatus.textContent = u.online ? "online" : "last seen";
     });
   });
 }
 
-/* ---------- ADMIN ---------- */
-function setupAdmin() {
-  const aref = db.ref(`chats/${chatId}/admin`);
-  aref.transaction(cur => cur || myId, () => {
-    aref.once("value", s => {
-      adminId = s.val();
-      isAdmin = adminId === myId;
-
-      disappearSelect.disabled = !isAdmin;
-      clearChatBtn.style.display = isAdmin ? "inline" : "none";
-    });
-  });
-}
-
-/* PART 1 END */
-
-/****************************************************
- * SNOWFLAKE CHAT — FINAL JS (PART 2 / 4)
- * Messaging + Ticks + Disappearing
- ****************************************************/
-
-/* ---------- MESSAGE LISTENERS ---------- */
+/*********************************************************
+ * MESSAGES
+ *********************************************************/
 function listenMessages() {
-  const ref = db.ref(`chats/${chatId}/messages`);
+  const msgRef = db.ref(`chats/${chatId}/messages`);
 
-  ref.on("child_added", snap => {
+  msgRef.limitToLast(200).on("child_added", snap => {
     renderMessage(snap.key, snap.val());
   });
 
-  ref.on("child_changed", snap => {
-    const el = document.getElementById("msg_" + snap.key);
-    if (el) updateTicks(el, snap.val());
-  });
-
-  ref.on("child_removed", snap => {
-    const el = document.getElementById("msg_" + snap.key);
-    if (el) el.remove();
+  msgRef.on("child_changed", snap => {
+    updateTicks(snap.key, snap.val());
   });
 }
 
-/* ---------- RENDER MESSAGE ---------- */
-function renderMessage(msgId, msg) {
-  const mine = msg.from === myId;
+function renderMessage(id, m) {
+  const isMine = m.from === myId;
 
-  const div = document.createElement("div");
-  div.className = "message " + (mine ? "me" : "other");
-  div.id = "msg_" + msgId;
-
-  if (msg.deletedForAll) {
-    div.innerHTML = "<i>🚫 Message deleted</i>";
-    messagesDiv.appendChild(div);
-    scrollBottom();
-    return;
-  }
+  const el = document.createElement("div");
+  el.className = "message " + (isMine ? "me" : "other");
+  el.id = "msg_" + id;
 
   let html = "";
 
-  /* Reply preview */
-  if (msg.replyTo) {
-    html += `
-      <div class="reply-preview">
-        <small>${esc(msg.replyTo.from)}</small>
-        <div>${esc(msg.replyTo.text)}</div>
-      </div>`;
-  }
-
-  /* Content */
-  if (msg.type === "image") {
-    html += `<img src="${msg.fileData}">`;
-  } else if (msg.type === "audio") {
-    html += `<audio controls src="${msg.fileData}"></audio>`;
+  if (m.type === "image") {
+    html += `<img src="${m.fileData}">`;
+  } else if (m.type === "audio") {
+    html += `<audio controls src="${m.fileData}"></audio>`;
   } else {
-    html += esc(msg.text);
+    html += escapeHTML(m.text || "");
   }
 
-  /* Meta */
+  const delivered = m.deliveredTo ? Object.keys(m.deliveredTo).length : 0;
+  const seen = m.seenBy ? Object.keys(m.seenBy).length : 0;
+
+  let ticks = "";
+  if (seen > 0) ticks = "✔✔";
+  else if (delivered > 0) ticks = "✔";
+
   html += `
     <div class="meta">
-      <span>${new Date(msg.time).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit"
-      })}</span>
-      ${mine ? `<span class="ticks"></span>` : ""}
+      <span>${new Date(m.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>
+      ${isMine ? `<span>${ticks}</span>` : ""}
     </div>
   `;
 
-  div.innerHTML = html;
-  messagesDiv.appendChild(div);
+  el.innerHTML = html;
+  messagesDiv.appendChild(el);
   scrollBottom();
 
-  /* Delivery + Seen */
-  if (!mine) {
-    const mref = db.ref(`chats/${chatId}/messages/${msgId}`);
-    mref.child(`deliveredTo/${myId}`).set(Date.now());
-    mref.child(`seenBy/${myId}`).set(Date.now());
-  }
-
-  applyDisappearing(msgId, msg.time);
-}
-
-/* ---------- TICK ACCURACY ---------- */
-function updateTicks(el, msg) {
-  const t = el.querySelector(".ticks");
-  if (!t) return;
-
-  const deliveredCount = msg.deliveredTo
-    ? Object.keys(msg.deliveredTo).length
-    : 0;
-
-  const seenCount = msg.seenBy
-    ? Object.keys(msg.seenBy).length
-    : 0;
-
-  if (seenCount > 1) {
-    t.textContent = "✔✔";
-  } else if (deliveredCount > 1) {
-    t.textContent = "✔";
+  // Delivered / seen
+  if (!isMine) {
+    const seenBy = m.seenBy || {};
+    if (!seenBy[myId]) {
+      db.ref(`chats/${chatId}/messages/${id}/seenBy/${myId}`)
+        .set(Date.now());
+    }
   } else {
-    t.textContent = "";
+    db.ref(`chats/${chatId}/messages/${id}/deliveredTo/${myId}`)
+      .set(Date.now());
   }
 }
 
-/* ---------- SEND TEXT ---------- */
+function updateTicks(id, m) {
+  const el = document.getElementById("msg_" + id);
+  if (!el) return;
+  const meta = el.querySelector(".meta");
+  if (!meta) return;
+
+  const delivered = m.deliveredTo ? Object.keys(m.deliveredTo).length : 0;
+  const seen = m.seenBy ? Object.keys(m.seenBy).length : 0;
+
+  let ticks = "";
+  if (seen > 0) ticks = "✔✔";
+  else if (delivered > 0) ticks = "✔";
+
+  const spans = meta.querySelectorAll("span");
+  if (spans[1]) spans[1].textContent = ticks;
+}
+
+/*********************************************************
+ * SEND TEXT
+ *********************************************************/
 sendBtn.onclick = sendText;
 messageInput.addEventListener("keydown", e => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    sendText();
-  }
+  if (e.key === "Enter") sendText();
 });
 
 function sendText() {
@@ -275,340 +238,109 @@ function sendText() {
 
   sendMessage({
     type: "text",
-    text: text
+    text
   });
 
   messageInput.value = "";
 }
 
-/* ---------- CORE SEND ---------- */
+/*********************************************************
+ * SEND FILE
+ *********************************************************/
+attachBtn.onclick = () => fileInput.click();
+
+fileInput.onchange = async () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+
+  if (file.size > MAX_FILE_SIZE) {
+    alert("File too large");
+    return;
+  }
+
+  const dataUrl = await readFile(file);
+
+  sendMessage({
+    type: file.type.startsWith("image") ? "image" : "audio",
+    fileData: dataUrl
+  });
+
+  fileInput.value = "";
+};
+
+function readFile(file) {
+  return new Promise(res => {
+    const fr = new FileReader();
+    fr.onload = () => res(fr.result);
+    fr.readAsDataURL(file);
+  });
+}
+
+/*********************************************************
+ * VOICE
+ *********************************************************/
+recordBtn.onclick = async () => {
+  if (isRecording) {
+    recorder.stop();
+    isRecording = false;
+    recordBtn.textContent = "🎙";
+    return;
+  }
+
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  recorder = new MediaRecorder(stream);
+  audioChunks = [];
+
+  recorder.ondataavailable = e => audioChunks.push(e.data);
+  recorder.onstop = async () => {
+    const blob = new Blob(audioChunks, { type: "audio/webm" });
+    if (blob.size > MAX_FILE_SIZE) return;
+
+    const data = await readFile(blob);
+    sendMessage({ type: "audio", fileData: data });
+  };
+
+  recorder.start();
+  isRecording = true;
+  recordBtn.textContent = "⏹";
+};
+
+/*********************************************************
+ * CORE SEND
+ *********************************************************/
 function sendMessage(payload) {
   const ref = db.ref(`chats/${chatId}/messages`).push();
-
   ref.set({
     from: myId,
     name: myName,
     time: Date.now(),
     deliveredTo: {},
     seenBy: {},
-    replyTo: replyToMessage,
     ...payload
   });
-
-  replyToMessage = null;
-  replyBar.classList.add("hidden");
 }
 
-/* ---------- DISAPPEARING ---------- */
-function applyDisappearing(msgId, msgTime) {
-  db.ref(`chats/${chatId}/disappear`).once("value", snap => {
-    const seconds = snap.val();
-    if (!seconds || seconds <= 0) return;
-
-    const remaining = (seconds * 1000) - (Date.now() - msgTime);
-    if (remaining <= 0) {
-      db.ref(`chats/${chatId}/messages/${msgId}`)
-        .update({ deletedForAll: true });
-    } else {
-      setTimeout(() => {
-        db.ref(`chats/${chatId}/messages/${msgId}`)
-          .update({ deletedForAll: true });
-      }, remaining);
-    }
-  });
-}
-
-/* START MESSAGE LISTENING AFTER LOGIN */
-function startChatListeners() {
-  listenMessages();
-}
-
-/* Call after admin setup */
-setTimeout(() => {
-  if (chatId) startChatListeners();
-}, 300);
-
-/* PART 2 END */
-/****************************************************
- * SNOWFLAKE CHAT — FINAL JS (PART 3 / 4)
- * Swipe Reply + Long Press + Delete
- ****************************************************/
-
-/* ---------- MESSAGE INTERACTIONS ---------- */
-function attachMessageEvents(el, msgId, msgData) {
-  let startX = 0;
-  let startTime = 0;
-  let longPressTimer = null;
-
-  /* ----- TOUCH START ----- */
-  el.addEventListener("touchstart", e => {
-    startX = e.touches[0].clientX;
-    startTime = Date.now();
-
-    longPressTimer = setTimeout(() => {
-      openMsgMenu(msgId, msgData);
-    }, 450);
-  });
-
-  /* ----- TOUCH MOVE ----- */
-  el.addEventListener("touchmove", e => {
-    const dx = e.touches[0].clientX - startX;
-    if (Math.abs(dx) > 25) clearTimeout(longPressTimer);
-  });
-
-  /* ----- TOUCH END ----- */
-  el.addEventListener("touchend", e => {
-    clearTimeout(longPressTimer);
-    const dx = e.changedTouches[0].clientX - startX;
-    const dt = Date.now() - startTime;
-
-    /* Swipe left to reply */
-    if (dx < -40 && dt < 500) {
-      startReply(msgId, msgData);
-    }
-  });
-}
-
-/* ---------- OVERRIDE RENDER TO ATTACH EVENTS ---------- */
-const _renderMessageOriginal = renderMessage;
-renderMessage = function (msgId, msg) {
-  _renderMessageOriginal(msgId, msg);
-  const el = document.getElementById("msg_" + msgId);
-  if (el) attachMessageEvents(el, msgId, msg);
-};
-
-/* ---------- REPLY ---------- */
-function startReply(msgId, msg) {
-  replyToMessage = {
-    id: msgId,
-    from: msg.name,
-    text: msg.text || (msg.type === "image" ? "📷 Image" : "🎤 Audio")
-  };
-
-  replyText.textContent = replyToMessage.text;
-  replyBar.classList.remove("hidden");
-  messageInput.focus();
-}
-
-cancelReply.onclick = () => {
-  replyToMessage = null;
-  replyBar.classList.add("hidden");
-};
-
-/* ---------- MESSAGE MENU ---------- */
-function openMsgMenu(msgId, msg) {
-  selectedMsgId = msgId;
-  selectedMsgData = msg;
-
-  msgMenu.classList.add("show");
-
-  document.getElementById("menuReply").onclick = () => {
-    closeMsgMenu();
-    startReply(msgId, msg);
-  };
-
-  document.getElementById("menuDeleteMe").onclick = () => {
-    closeMsgMenu();
-    document.getElementById("msg_" + msgId)?.remove();
-  };
-
-  document.getElementById("menuDeleteAll").onclick = () => {
-    closeMsgMenu();
-    if (!isAdmin && msg.from !== myId) {
-      alert("Only sender or admin can delete for everyone");
-      return;
-    }
-    db.ref(`chats/${chatId}/messages/${msgId}`)
-      .update({ deletedForAll: true });
-  };
-}
-
-/* ---------- CLOSE MENU ---------- */
-function closeMsgMenu() {
-  msgMenu.classList.remove("show");
-}
-
-document.addEventListener("click", e => {
-  if (!msgMenu.contains(e.target)) closeMsgMenu();
-});
-
-/* PART 3 END */
-/****************************************************
- * SNOWFLAKE CHAT — FINAL JS (PART 4 / 4)
- * Disappearing + Clear Chat + Accurate Ticks
- ****************************************************/
-
-/* ================= TICK ACCURACY FIX ================= */
-
-/*
-✔ Sent     = message exists
-✔✔ Delivered = other user joined chat
-✔✔ Blue    = other user opened chat (seen)
-*/
-
-function updateTicks(msgId, msg) {
-  const el = document.getElementById("msg_" + msgId);
-  if (!el) return;
-
-  const tickSpan = el.querySelector(".ticks");
-  if (!tickSpan) return;
-
-  const deliveredCount = msg.deliveredTo
-    ? Object.keys(msg.deliveredTo).length
-    : 0;
-  const seenCount = msg.seenBy
-    ? Object.keys(msg.seenBy).length
-    : 0;
-
-  if (seenCount > 0) {
-    tickSpan.textContent = "✔✔";
-    tickSpan.classList.add("seen");
-  } else if (deliveredCount > 0) {
-    tickSpan.textContent = "✔✔";
-  } else {
-    tickSpan.textContent = "✔";
-  }
-}
-
-/* ================= DISAPPEARING MESSAGES ================= */
-
-const DISAPPEAR_TIME = 60 * 1000; // 1 minute
-
-function handleDisappearing(msgId, msg) {
-  if (!msg.disappear) return;
-
-  const remaining = msg.expireAt - Date.now();
-  if (remaining <= 0) {
-    db.ref(`chats/${chatId}/messages/${msgId}`).remove();
-  } else {
-    setTimeout(() => {
-      db.ref(`chats/${chatId}/messages/${msgId}`).remove();
-    }, remaining);
-  }
-}
-
-/* Extend render */
-const _renderOriginal2 = renderMessage;
-renderMessage = function (msgId, msg) {
-  _renderOriginal2(msgId, msg);
-  handleDisappearing(msgId, msg);
-};
-
-/* Enable disappear toggle (admin only) */
-let disappearEnabled = false;
-
-document.getElementById("exportChatBtn").onclick = () => {
-  if (!isAdmin) {
-    alert("Only admin can toggle disappearing messages");
-    return;
-  }
-  disappearEnabled = !disappearEnabled;
-  alert(
-    disappearEnabled
-      ? "Disappearing messages ON (1 min)"
-      : "Disappearing messages OFF"
-  );
-};
-
-/* ================= CLEAR CHAT FOR EVERYONE ================= */
-
-function clearChatForEveryone() {
-  if (!isAdmin) {
-    alert("Admin only");
-    return;
-  }
-  if (!confirm("Clear chat for everyone?")) return;
-
-  db.ref(`chats/${chatId}/messages`).remove();
-}
-
-document.getElementById("chatName").onclick = clearChatForEveryone;
-
-/* ================= SEND MESSAGE EXTENSION ================= */
-
-const _sendMessageOriginal = sendMessage;
-sendMessage = function (payload) {
-  const ref = db.ref(`chats/${chatId}/messages`).push();
-
-  const base = {
-    from: myId,
-    name: myName,
-    time: Date.now(),
-    deliveredTo: {},
-    seenBy: {}
-  };
-
-  if (replyToMessage) base.replyTo = replyToMessage;
-
-  if (disappearEnabled) {
-    base.disappear = true;
-    base.expireAt = Date.now() + DISAPPEAR_TIME;
-  }
-
-  ref.set({ ...base, ...payload });
-
-  replyToMessage = null;
-  replyBar.classList.add("hidden");
-};
-
-/* ================= TYPING INDICATOR ================= */
-
+/*********************************************************
+ * TYPING
+ *********************************************************/
 messageInput.addEventListener("input", () => {
-  const ref = db.ref(`chats/${chatId}/typing/${myId}`);
-  ref.set(myName);
-
-  clearTimeout(window._typingTimer);
-  window._typingTimer = setTimeout(() => {
-    ref.remove();
-  }, 1200);
+  db.ref(`chats/${chatId}/typing/${myId}`).set(true);
+  db.ref(`chats/${chatId}/typing/${myId}`).onDisconnect().remove();
 });
 
 function listenTyping() {
-  const ref = db.ref(`chats/${chatId}/typing`);
-  ref.on("value", snap => {
-    const data = snap.val() || {};
-    const names = Object.values(data).filter(n => n !== myName);
-    typingIndicator.textContent = names.length
-      ? names[0] + " is typing..."
-      : "";
+  db.ref(`chats/${chatId}/typing`).on("value", snap => {
+    const v = snap.val() || {};
+    const others = Object.keys(v).filter(id => id !== myId);
+    typingIndicator.textContent = others.length ? "typing…" : "";
   });
 }
 
-/* ================= THEME TOGGLE (FIXED) ================= */
-
+/*********************************************************
+ * THEME
+ *********************************************************/
 themeToggle.onclick = () => {
   document.body.classList.toggle("dark");
-  localStorage.setItem(
-    "sf_theme",
-    document.body.classList.contains("dark") ? "dark" : "light"
-  );
+  themeToggle.textContent =
+    document.body.classList.contains("dark") ? "☀️" : "🌙";
 };
-
-if (localStorage.getItem("sf_theme") === "dark") {
-  document.body.classList.add("dark");
-}
-
-/* ================= MOBILE KEYBOARD FIX ================= */
-
-messageInput.addEventListener("focus", () => {
-  setTimeout(() => {
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  }, 300);
-});
-
-/* ================= FIREBASE CONNECTION WATCH ================= */
-
-db.ref(".info/connected").on("value", snap => {
-  if (!snap.val()) {
-    console.warn("Firebase disconnected");
-  }
-});
-
-/* ================= FINAL SAFETY ================= */
-
-window.addEventListener("beforeunload", () => {
-  db.ref("users/" + myId + "/online").set(false);
-});
-
-/* ======== END OF SCRIPT.JS ======== */
-

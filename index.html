@@ -1,110 +1,89 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>❄️ Snowflake Chat</title>
-
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Snowflake Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
   <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
 
-  <!-- PWA / iOS Safe -->
+  <!-- iOS / PWA safe -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
 </head>
 
 <body class="login">
 
-<!-- ================= LOGIN SCREEN ================= -->
-<div id="loginScreen" class="screen login-screen">
-  <div class="login-card">
-    <div class="logo">❄️</div>
-    <h1>Snowflake</h1>
-    <p class="subtitle">Private 1-to-1 Chat</p>
+  <!-- ================= LOGIN SCREEN ================= -->
+  <div id="loginScreen" class="screen login-screen">
+    <div class="login-card">
+      <div class="logo">❄️</div>
+      <h1>Snowflake</h1>
+      <p class="subtitle">Private 1-to-1 Chat</p>
 
-    <input id="nameInput" type="text" placeholder="Your name" autocomplete="name" />
-    <input id="passwordInput" type="password" placeholder="Chat password" />
+      <input
+        id="nameInput"
+        type="text"
+        placeholder="Your name"
+        autocomplete="name"
+      />
 
-    <button id="loginBtn">Enter Chat</button>
-    <div id="loginError" class="error"></div>
-  </div>
-</div>
+      <input
+        id="passwordInput"
+        type="password"
+        placeholder="Chat password"
+        autocomplete="current-password"
+      />
 
-<!-- ================= CHAT SCREEN ================= -->
-<div id="chatScreen" class="screen hidden">
+      <button id="loginBtn">Enter Chat</button>
 
-  <!-- Header -->
-  <header class="chat-header">
-    <div class="chat-title">
-      <span id="chatName">Private Chat</span>
-      <small id="chatStatus">offline</small>
+      <div id="loginError" class="error"></div>
     </div>
+  </div>
 
-    <div class="header-actions">
+  <!-- ================= CHAT SCREEN ================= -->
+  <div id="chatScreen" class="screen hidden">
+
+    <!-- Header -->
+    <header class="chat-header">
+      <div class="chat-title">
+        <span id="chatName">Private Chat</span>
+        <small id="chatStatus">offline</small>
+      </div>
       <button id="themeToggle" title="Toggle theme">🌙</button>
+    </header>
+
+    <!-- Messages -->
+    <div id="messages" class="messages"></div>
+
+    <!-- Typing -->
+    <div id="typingIndicator" class="typing"></div>
+
+    <!-- Composer -->
+    <div class="composer">
+      <input id="fileInput" type="file" accept="image/*,audio/*" hidden />
+
+      <button id="attachBtn" title="Attach">📎</button>
+      <button id="recordBtn" title="Voice">🎙</button>
+
+      <input
+        id="messageInput"
+        type="text"
+        placeholder="Message"
+        autocomplete="off"
+      />
+
+      <button id="sendBtn">Send</button>
     </div>
-  </header>
 
-  <!-- Messages -->
-  <div id="messages" class="messages"></div>
-
-  <!-- Typing -->
-  <div id="typingIndicator" class="typing"></div>
-
-  <!-- Reply Preview -->
-  <div id="replyBar" class="reply-bar hidden">
-    <div class="reply-content">
-      <strong>Replying to:</strong>
-      <span id="replyText"></span>
-    </div>
-    <button id="cancelReply">✖</button>
   </div>
 
-  <!-- Composer -->
-  <div class="composer">
-    <input id="fileInput" type="file" accept="image/*,audio/*" hidden />
+  <!-- ================= FIREBASE v8 ================= -->
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
 
-    <button id="attachBtn" title="Attach">📎</button>
-    <button id="recordBtn" title="Voice">🎙</button>
-
-    <input
-      id="messageInput"
-      type="text"
-      placeholder="Message"
-      autocomplete="off"
-    />
-
-    <button id="sendBtn">➤</button>
-  </div>
-</div>
-
-<!-- ================= FIREBASE v8 ================= -->
-<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-
-<!-- Firebase config -->
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDWgauZPozTWUVuDGRaMCq2NgARt60p7wA",
-  authDomain: "snowflake-62c81.firebaseapp.com",
-  databaseURL: "https://snowflake-62c81-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "snowflake-62c81",
-  storageBucket: "snowflake-62c81.appspot.com",
-  messagingSenderId: "248778051768",
-  appId: "1:248778051768:web:113d04d437849e01c2644d"
-};
-</script>
-
-<!-- App -->
-<script src="script.js"></script>
-<!-- ================= MESSAGE ACTION MENU ================= -->
-<div id="msgMenu" class="msg-menu hidden">
-  <button id="menuReply">Reply</button>
-  <button id="menuDeleteMe">Delete for me</button>
-  <button id="menuDeleteAll" class="danger">Delete for everyone</button>
-</div>
+  <!-- App -->
+  <script src="script.js"></script>
 </body>
 </html>
