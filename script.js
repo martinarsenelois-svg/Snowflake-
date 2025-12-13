@@ -1,174 +1,168 @@
-/* ================= FIREBASE ================= */
 firebase.initializeApp({
-  apiKey:"AIzaSyDWgauZPozTWUVuDGRaMCq2NgARt60p7wA",
-  databaseURL:"https://snowflake-62c81-default-rtdb.europe-west1.firebasedatabase.app"
+  apiKey:"YOUR_KEY",
+  authDomain:"YOUR_DOMAIN",
+  databaseURL:"YOUR_DB",
+  projectId:"YOUR_PROJECT"
 });
+
 const db = firebase.database();
+const CHAT = db.ref("chat");
+const PRES = db.ref("presence");
+const TYPING = db.ref("typing");
 
-/* ================= STATE ================= */
-const PASSWORD="2382_BZ";
-const uid=localStorage.sf_uid||(localStorage.sf_uid=Math.random().toString(36).slice(2));
-let name=localStorage.sf_name||"";
-let chatId=new URLSearchParams(location.search).get("chat")||uid;
-let replyTo=null;
-let defaultTTL=parseInt(localStorage.sf_ttl||"0",10);
-let isConverting=false;
+const PASSWORD = "2382_BZ";
+const TTL_MIN = 5;
 
-/* ================= DOM ================= */
-const login=document.getElementById("login");
-const chat=document.getElementById("chat");
-const composer=document.querySelector(".composer");
-const messages=document.getElementById("messages");
-const input=document.getElementById("msgInput");
-const send=document.getElementById("send");
-const typingDiv=document.getElementById("typing");
-const presence=document.getElementById("presence");
+const el = id => document.getElementById(id);
 
-/* ================= LOGIN ================= */
-document.getElementById("loginBtn").onclick=()=>{
-  if(document.getElementById("password").value!==PASSWORD){
-    document.getElementById("loginError").innerText="Wrong password";
-    return;
-  }
-  if(!name){
-    name=document.getElementById("nameInput").value.trim();
-    if(!name) return alert("Enter name");
-    localStorage.sf_name=name;
-  }
-  startChat();
-};
+let myId = localStorage.getItem("sf_id") || crypto.randomUUID();
+localStorage.setItem("sf_id", myId);
 
-document.getElementById("saveName").onclick=()=>{
-  const v=document.getElementById("nameInput").value.trim();
-  if(v){name=v;localStorage.sf_name=v;}
-};
+let myName = "";
+let replyMeta = null;
 
-/* ================= CHAT INIT ================= */
-function startChat(){
-  login.classList.add("hidden");
-  chat.classList.remove("hidden");
-  composer.classList.remove("hidden");
-
-  const room=db.ref("chats/"+chatId);
-
-  // presence
-  db.ref("presence/"+uid).set({name,chatId,online:true});
-  db.ref("presence/"+uid).onDisconnect().set({name,chatId,online:false,last:Date.now()});
-
-  db.ref("presence").on("value",s=>{
-    const arr=Object.values(s.val()||{}).filter(u=>u.chatId===chatId&&u.online);
-    presence.innerText=arr.length+" online";
-  });
-
-  // messages
-  room.on("child_added",snap=>{
-    renderMessage(snap.key,snap.val());
-  });
-
-  // typing
-  input.oninput=()=>{
-    db.ref("typing/"+chatId+"/"+uid).set(Date.now());
-    db.ref("typing/"+chatId+"/"+uid).onDisconnect().remove();
-  };
-
-  db.ref("typing/"+chatId).on("value",s=>{
-    const v=s.val()||{};
-    const others=Object.keys(v).filter(k=>k!==uid);
-    typingDiv.innerText=others.length? "Typing…" : "";
-  });
-}
-
-/* ================= SEND ================= */
-send.onclick=sendMessage;
-input.onkeydown=e=>e.key==="Enter"&&sendMessage();
-
-function sendMessage(){
-  if(isConverting||!input.value.trim())return;
-  const msg={
-    senderId:uid,
-    sender:name,
-    text:input.value,
-    time:Date.now(),
-    ttl:defaultTTL,
-    reply:replyTo,
-    reactions:{}
-  };
-  db.ref("chats/"+chatId).push(msg);
-  input.value="";
-  replyTo=null;
-}
-
-/* ================= RENDER ================= */
-function renderMessage(id,m){
-  if(m.deletedForAll){
-    const t=document.createElement("div");
-    t.className="msg other";
-    t.innerText="❌ Message deleted";
-    messages.appendChild(t);
+el("loginBtn").onclick = () => {
+  if (el("passInput").value !== PASSWORD) {
+    el("loginError").textContent = "Wrong password";
     return;
   }
 
-  const el=document.createElement("div");
-  el.className="msg "+(m.senderId===uid?"me":"other");
+  myName = el("nameInput").value || "User";
+  el("login").classList.add("hidden");
+  el("chat").classList.remove("hidden");
 
-  if(m.reply){
-    el.innerHTML+=`<div class="meta">↪ ${m.reply.text}</div>`;
+  PRES.child(myId).set({ name: myName, online: true });
+  PRES.child(myId).onDisconnect().remove();
+
+  listen();
+};
+
+PRES.on("value", s => {
+  const online = Object.keys(s.val() || {}).length > 1;
+  el("status").textContent = online ? "online" : "offline";
+});
+
+el("messageInput").oninput = () => {
+  TYPING.child(myId).set(true);
+  setTimeout(() => TYPING.child(myId).remove(), 1500);
+};
+
+TYPING.on("value", s => {
+  const typing = Object.keys(s.val() || {}).some(id => id !== myId);
+  if (typing) el("status").textContent = "typing…";
+});
+
+function listen() {
+  CHAT.on("child_added", snap => {
+    const m = snap.val();
+    if (m.expiresAt && Date.now() > m.expiresAt) {
+      CHAT.child(snap.key).remove();
+      return;
+    }
+    render(m, snap.key);
+  });
+}
+
+el("composer").onsubmit = e => {
+  e.preventDefault();
+  const text = el("messageInput").value.trim();
+  if (!text) return;
+  send({ type: "text", text });
+};
+
+function send(data) {
+  CHAT.push({
+    senderId: myId,
+    senderName: myName,
+    time: Date.now(),
+    expiresAt: Date.now() + TTL_MIN * 60000,
+    reply: replyMeta,
+    deleted: false,
+    ...data
+  });
+  replyMeta = null;
+  el("replyBar").classList.add("hidden");
+  el("messageInput").value = "";
+}
+
+el("attachBtn").onclick = () => el("fileInput").click();
+
+el("fileInput").onchange = () => {
+  const f = el("fileInput").files[0];
+  if (!f) return;
+  if (f.size > 800 * 1024) return alert("File too large");
+
+  const r = new FileReader();
+  r.onload = () => send({ type: "image", data: r.result });
+  r.readAsDataURL(f);
+};
+
+let recorder, chunks = [];
+el("micBtn").onclick = async () => {
+  if (recorder?.state === "recording") {
+    recorder.stop();
+    return;
   }
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  recorder = new MediaRecorder(stream);
+  chunks = [];
+  recorder.ondataavailable = e => chunks.push(e.data);
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: "audio/webm" });
+    const r = new FileReader();
+    r.onload = () => send({ type: "audio", data: r.result });
+    r.readAsDataURL(blob);
+  };
+  recorder.start();
+};
 
-  if(m.fileData){
-    if(m.fileType.startsWith("image")){
-      el.innerHTML+=`<img src="${m.fileData}" style="max-width:200px">`;
-    }else if(m.fileType.startsWith("audio")){
-      el.innerHTML+=`<audio controls src="${m.fileData}"></audio>`;
-    }else{
-      el.innerHTML+=`<a download="${m.fileName}" href="${m.fileData}">📎 ${m.fileName}</a>`;
+function render(m, id) {
+  const d = document.createElement("div");
+  d.className = "msg " + (m.senderId === myId ? "me" : "other");
+
+  if (m.deleted) {
+    d.textContent = "This message was deleted";
+  } else {
+    if (m.reply) {
+      const r = document.createElement("div");
+      r.className = "reply-preview";
+      r.textContent = m.reply.preview;
+      d.appendChild(r);
+    }
+
+    if (m.type === "text") d.append(m.text);
+    if (m.type === "image") {
+      const i = document.createElement("img");
+      i.src = m.data;
+      d.appendChild(i);
+    }
+    if (m.type === "audio") {
+      const a = document.createElement("audio");
+      a.controls = true;
+      a.src = m.data;
+      d.appendChild(a);
     }
   }
 
-  if(m.text) el.innerHTML+=`<div>${m.text}</div>`;
+  d.oncontextmenu = e => {
+    e.preventDefault();
+    if (m.senderId === myId && !m.deleted) {
+      if (confirm("Delete for everyone?")) {
+        CHAT.child(id).update({ deleted: true });
+      }
+    }
+  };
 
-  const reacts=document.createElement("div");
-  reacts.className="reactions";
-  ["❤️","😂","❄️"].forEach(r=>{
-    const s=document.createElement("span");
-    s.innerText=r;
-    s.onclick=()=>toggleReaction(id,r);
-    reacts.appendChild(s);
-  });
-  el.appendChild(reacts);
+  d.onclick = () => {
+    replyMeta = {
+      preview: m.type === "text" ? m.text : m.type
+    };
+    el("replyPreview").textContent = replyMeta.preview;
+    el("replyBar").classList.remove("hidden");
+  };
 
-  el.innerHTML+=`<div class="meta">${m.sender}</div>`;
-  messages.appendChild(el);
-  messages.scrollTop=messages.scrollHeight;
-
-  // TTL
-  if(m.ttl>0){
-    setTimeout(()=>db.ref("chats/"+chatId+"/"+id).remove(),m.ttl*60000);
-  }
+  el("messages").appendChild(d);
+  el("messages").scrollTop = el("messages").scrollHeight;
 }
 
-/* ================= REACTIONS ================= */
-function toggleReaction(id,r){
-  const ref=db.ref("chats/"+chatId+"/"+id+"/reactions/"+r+"/"+uid);
-  ref.once("value").then(s=>{
-    if(s.exists()) ref.remove();
-    else ref.set(true);
-  });
-}
-
-/* ================= SNOW ================= */
-const canvas=document.getElementById("snow");
-const ctx=canvas.getContext("2d");
-let W=canvas.width=innerWidth,H=canvas.height=innerHeight;
-const flakes=[...Array(150)].map(()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*3+1,d:Math.random()*2}));
-setInterval(()=>{
-  ctx.clearRect(0,0,W,H);
-  ctx.fillStyle="rgba(255,255,255,.8)";
-  ctx.beginPath();
-  flakes.forEach(f=>{
-    ctx.moveTo(f.x,f.y);
-    ctx.arc(f.x,f.y,f.r,0,Math.PI*2);
-    f.y+=f.d;if(f.y>H){f.y=0;f.x=Math.random()*W;}
-  });
-  ctx.fill();
-},33);
+el("cancelReply").onclick = () => el("replyBar").classList.add("hidden");

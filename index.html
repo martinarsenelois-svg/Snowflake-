@@ -4,72 +4,54 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>❄️ Snowflake Chat</title>
+
 <link rel="stylesheet" href="style.css">
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
+
 <body>
 
-<canvas id="snow"></canvas>
-
-<header class="topbar">
-  <div class="left">
-    <img id="avatar" src="https://api.dicebear.com/6.x/identicon/svg?seed=snow">
-    <div>
-      <div class="title">Snowflake Chat</div>
-      <div id="presence" class="subtitle">offline</div>
-    </div>
+<section id="login" class="login">
+  <div class="login-card">
+    <div class="logo">❄️</div>
+    <h1>Snowflake</h1>
+    <p>Private 1-to-1 chat</p>
+    <input id="nameInput" placeholder="Your name">
+    <input id="passInput" type="password" placeholder="Password">
+    <button id="loginBtn">Enter</button>
+    <div id="loginError"></div>
   </div>
-  <div class="right">
-    <button id="toggleSnow">❄️</button>
-    <button id="toggleTheme">🌙</button>
-    <button id="openSettings">⚙️</button>
+</section>
+
+<section id="chat" class="chat hidden">
+
+<header class="header">
+  <div class="avatar">❄️</div>
+  <div class="header-info">
+    <div class="title">Snowflake</div>
+    <div id="status" class="status">offline</div>
   </div>
 </header>
 
-<div id="login" class="panel center">
-  <h2>❄️ Snowflake</h2>
-  <input id="password" type="password" placeholder="Password">
-  <button id="loginBtn">Enter</button>
-  <p id="loginError" class="error"></p>
-
-  <hr>
-  <input id="nameInput" placeholder="Your name">
-  <button id="saveName">Save Name</button>
-</div>
-
-<aside id="settings" class="panel hidden">
-  <h3>Settings</h3>
-  <label>Default disappearing (minutes)
-    <select id="ttlSelect">
-      <option value="0">Off</option>
-      <option value="1">1</option>
-      <option value="5">5</option>
-      <option value="30">30</option>
-    </select>
-  </label>
-  <button id="clearChat">Clear Chat (admin)</button>
-  <button id="logout">Logout</button>
-</aside>
-
-<main id="chat" class="hidden">
-  <div id="messages"></div>
-  <div id="typing" class="typing"></div>
-</main>
+<main id="messages" class="messages"></main>
 
 <div id="replyBar" class="reply hidden">
-  <span id="replyText"></span>
-  <button id="cancelReply">✖</button>
+  <span id="replyPreview"></span>
+  <button id="cancelReply">✕</button>
 </div>
 
-<footer class="composer hidden">
-  <input id="fileInput" type="file" hidden>
-  <button id="attach">📎</button>
-  <button id="record">🎙</button>
-  <input id="msgInput" placeholder="Message…">
-  <button id="send">➤</button>
-</footer>
+<form id="composer" class="composer">
+  <input id="fileInput" type="file" accept="image/*" hidden>
+  <button type="button" id="attachBtn">📎</button>
+  <button type="button" id="micBtn">🎙</button>
+  <input id="messageInput" placeholder="Message…">
+  <button type="submit">➤</button>
+</form>
 
-<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+</section>
+
 <script src="script.js"></script>
 </body>
 </html>
